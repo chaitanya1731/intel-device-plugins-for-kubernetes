@@ -1,6 +1,6 @@
 image:
   hub: intel
-  tag: "devel"
+  tag: "0.24.0"
   pullPolicy: IfNotPresent
 
 # Arguments for the controller
