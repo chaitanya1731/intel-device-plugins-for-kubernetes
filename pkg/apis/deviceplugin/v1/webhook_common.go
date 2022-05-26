@@ -25,7 +25,25 @@ import (
 // common functions for webhooks
 
 func validatePluginImage(image, expectedImageName string, expectedMinVersion *version.Version) error {
-	// Ignore registry, vendor and extract the image name with the tag
+	
+	// Ignore registry, vendor and extract the image name with the SHA Digest
+	if strings.Contains(image, "@") {
+		shaParts := strings.SplitN(filepath.Base(image), "@", 2)
+		shaImageName := shaParts[0];
+		shaIndex := shaParts[1];
+		
+		if shaImageName != expectedImageName {
+			return errors.Errorf("incorrect image name %q. Make sure you use '<vendor>/%s@sha256:<sha-key>'", shaImageName, expectedImageName)
+		}
+
+		if !strings.HasPrefix(shaIndex, "sha256:") {
+			return errors.Errorf("incorrect SHA digest name. Make sure to use correct format '<vendor>/%s@sha256:<sha-key>'", expectedImageName)
+		}
+
+		return nil 
+	}
+
+	// Ignore registry, vendor and extract the image name with the tag	
 	parts := strings.SplitN(filepath.Base(image), ":", 2)
 	if len(parts) != 2 {
 		return errors.Errorf("incorrect image field %q", image)
@@ -34,9 +52,7 @@ func validatePluginImage(image, expectedImageName string, expectedMinVersion *ve
 	imageName := parts[0]
 	versionStr := parts[1]
 
-	if strings.Contains(imageName, "@sha256")  { 
-		return nil
-	}
+
 
 	if imageName != expectedImageName {
 		return errors.Errorf("incorrect image name %q. Make sure you use '<vendor>/%s:<version>'", imageName, expectedImageName)
